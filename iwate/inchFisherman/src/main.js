@@ -17,7 +17,7 @@ var Breakout = cocos.nodes.Layer.extend({
     hit:null,
     player:null,
     hpBar:null,
-    
+    boatBar:null,
     init: function() {
         // You must always call the super class version of init
         Breakout.superclass.init.call(this);
@@ -54,16 +54,10 @@ var Breakout = cocos.nodes.Layer.extend({
         this.addChild({child: menu, z: 9});
         
         
-        var sprite = cocos.nodes.Sprite.create({
-                        file: '/resources/bar.png',
-                        rect: new geo.Rect(0, 0, 50, 320)
-                    });
+        var sprite = cocos.nodes.Sprite.create({ file: '/resources/bar.png' });
         sprite.set('anchorPoint', new geo.Point(0,0));
         this.addChild({child: sprite,z:10});
-        sprite = cocos.nodes.Sprite.create({
-                        file: '/resources/bar_back.png',
-                        rect: new geo.Rect(0, 0, 50, 320)
-                    });
+        sprite = cocos.nodes.Sprite.create({ file: '/resources/bar_back.png'});
         sprite.set('anchorPoint', new geo.Point(0,0));
         this.addChild({child: sprite,z:8});
         var l = cocos.nodes.Label.create({string: '10',
@@ -71,7 +65,20 @@ var Breakout = cocos.nodes.Layer.extend({
                                         fontSize: 12,
                                        fontColor: '#502d16'});
         l.set('position', new geo.Point(32, 161));
-        this.addChild({child: l, z: 9});
+        this.addChild({child: l, z: 11});
+        
+        
+        sprite = cocos.nodes.Sprite.create({ file: '/resources/hp_bar.png' });
+        sprite.set('anchorPoint', new geo.Point(0,1));
+        sprite.set('position',new geo.Point(0,60));
+        this.addChild({child: sprite,z:9});
+        this.set('hpBar',sprite);
+        
+        sprite = cocos.nodes.Sprite.create({ file: '/resources/boat_bar.png' });
+        sprite.set('anchorPoint', new geo.Point(0,1));
+        sprite.set('position',new geo.Point(0,107));
+        this.addChild({child: sprite,z:9});
+        this.set('boatBar',sprite);
         
         this.scheduleUpdate();
 //		this.set('isMouseEnabled',true);	
@@ -79,17 +86,19 @@ var Breakout = cocos.nodes.Layer.extend({
     update: function(){
         var p = this.get('player');
         var sts = p.get('status');
-        var r = 100*sts.hp / sts.HP
-        
+        var b = this.get('hpBar');
+        b.set('scaleY',sts.hp / sts.HP); 
     },
     moveLeft: function(){
         var player = this.get('player');
         var pos = util.copy(player.get('defaultPosition'));
+        if(pos.x>100)
         player.set('defaultPosition',new geo.Point(pos.x - 50, pos.y));
     },
     moveRight: function(){
         var player = this.get('player');
         var pos = util.copy(player.get('defaultPosition'));
+        if(pos.x<430)
         player.set('defaultPosition',new geo.Point(pos.x + 50, pos.y));
     },
 	mouseUp: function (event) {
@@ -149,7 +158,7 @@ exports.main = function() {
 	director.set("backgroundColor","00ffff")
     // Create a scene
     var scene = cocos.nodes.Scene.create();
-    director.set('displayFPS',true);
+ //   director.set('displayFPS',true);
 
     // Add our layer to the scene
     scene.addChild({child: Breakout.create()});

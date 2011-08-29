@@ -1,4 +1,4 @@
-var cocos = require('cocos2d');
+﻿var cocos = require('cocos2d');
 var geom = require('geometry');
 var actions = cocos.actions;
 var ccp = geom.ccp;
@@ -12,6 +12,7 @@ var Fish = cocos.nodes.Node.extend({
     label:null,
     funclist:[],
     status:null,
+    velocity:{x:10,y:20},
     //HP:null,length:null,weight:null,size:null,atack:null,defence:null,
     hit:0,
 	init: function() {
@@ -41,14 +42,31 @@ var Fish = cocos.nodes.Node.extend({
 	update: function(dt) {
         var pos = util.copy(this.get('position')),
             et  = util.copy(this.get('elapsedTime')),
-        	dPos = util.copy(this.get('defaultPosition'));
+        	dPos = util.copy(this.get('defaultPosition')),
+            v = util.copy(this.get('velocity'));
         
-        et += dt;
-        pos.x = 10*Math.cos(2*Math.PI*et/5)+dPos.x;
-        pos.y = 10*Math.sin(4*Math.PI*et/5)+dPos.y;
+        v.y -= 9.8*dt;
+        pos.x += v.x
+        pos.y += v.y;
+        
+        var s = cocos.Director.get('sharedDirector').get('winSize');
+        if(pos.x>s.width){
+                pos.x = 2*s.width-pos.x;
+                v.x = -v.x;
+            }
+        else if(pos.x<0){
+                pos.x = -pos.x;
+                v.x = -v.x;
+            }
+        else if(pos.y<0){
+                pos.x = -pos.x;
+                v.x = -v.x;
+            }
+        
+        wave.setPosition( new geo.Point(s.width/6*p[i][j], s.height/4*(i+1)));
  
         this.set('position', pos);
-        this.set('elapsedTime',et);
+        this.set('velocity',v);
     },
     setPosition: function(pos){
     	var Pos = new geom.Point(pos.x+50,pos.y+50);
