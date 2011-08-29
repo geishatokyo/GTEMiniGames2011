@@ -1,0 +1,6 @@
+{
+    "output": "box2ddemo.js",
+    "paths": {
+        "src" : "/"
+    }
+}
