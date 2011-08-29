@@ -2,6 +2,8 @@
 var cocos = require('cocos2d'),
 // Import the geometry module
     geo = require('geometry'),
+// Import the geometry module
+	util = require('util'),
 // Import box2d Physics Engine
 	box2d = require('box2d');
 
@@ -38,9 +40,22 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         this.scheduleUpdate();
         // Add Barrel
         var barrel = Barrel.create();
-        barrel.set('position', new geo.Point(4.75*400/14,7*400/14));
+        barrel.set('position', new geo.Point(6.25*400/14,7*400/14));
         this.addChild({child: barrel,z:20});
         this.set('barrel', barrel);
+        
+        // Add Menu
+        var up = cocos.nodes.MenuItemImage.create({normalImage: "/resources/sprites.png",
+                                                    selectedImage:"/resources/sprites.png",
+                                                    callback: util.callback(this, 'moveUp')});
+        var down = cocos.nodes.MenuItemImage.create({normalImage: "/resources/sprites.png",
+                                                    selectedImage:"/resources/sprites.png",
+                                                    callback: util.callback(this, 'moveDown')});
+        up.set('position',new geo.Point( 0,0)); 
+        down.set('position',new geo.Point( 0, 370));
+        var menu = cocos.nodes.Menu.create({items: [up,down]});
+        menu.set('position',new geo.Point(0,0));
+        this.addChild({child: menu, z: 9});  
     },
     
     createCrate: function(point, scale){
@@ -98,7 +113,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         bodyDef.position.Set(10, -2);
         world.CreateBody(bodyDef).CreateFixture(fixDef);
         
-        fixDef.shape.SetAsBox(2.5, 14);
+        fixDef.shape.SetAsBox(4, 14);
         bodyDef.position.Set(1, 13);
         world.CreateBody(bodyDef).CreateFixture(fixDef);
         bodyDef.position.Set(22, 13);
@@ -108,7 +123,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         bodyDef.type = box2d.b2Body.b2_dynamicBody;
         
         //create shot ball
-        bodyDef.position.x = 4;
+        bodyDef.position.x = 5;
         bodyDef.position.y = 6.5;
         var scale = 0.5,
             width = scale * 30;
@@ -223,6 +238,18 @@ var Box2ddemo = cocos.nodes.Layer.extend({
             this.set('mouseJoint', null);
         }
    },
+   moveUp: function(){
+   		var barrel = this.get('barrel'),
+        	pos = util.copy(barrel.get('Position')); 
+        pos.y -= 10; 
+        barrel.set('position', pos);
+   },
+   moveDown: function(){
+   		var barrel = this.get('barrel'),
+        	pos = util.copy(barrel.get('Position'));
+        pos.y += 10;
+        barrel.set('Position',pos); 
+   }
 });
 
 
