@@ -27,7 +27,7 @@ var Player = cocos.nodes.Node.extend({
         actionBack = action.reverse();
         seq = actions.Sequence.create({actions: [action, actionBack]});
         sprite.runAction(actions.RepeatForever.create(seq));
-        this.set('status',{hp:10,HP:100,level:1,atack:1,defence:1});
+        this.set('status',{hp:90,HP:100,level:1,atack:1,defence:1});
         
         this.scheduleUpdate();
         this.set('elapsedTime',initData.position*5);

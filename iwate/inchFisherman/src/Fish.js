@@ -1,4 +1,4 @@
-var cocos = require('cocos2d');
+﻿var cocos = require('cocos2d');
 var geom = require('geometry');
 var actions = cocos.actions;
 var ccp = geom.ccp;
@@ -7,11 +7,10 @@ var constant = require('Constant').Constant;
 
 
 var Fish = cocos.nodes.Node.extend({
-	elapsedTime:null,
-	defaultPosition:null,
     label:null,
     funclist:[],
     status:null,
+    velocity:{x:20,y:20},
     //HP:null,length:null,weight:null,size:null,atack:null,defence:null,
     hit:0,
 	init: function() {
@@ -20,40 +19,53 @@ var Fish = cocos.nodes.Node.extend({
         var img = cocos.nodes.MenuItemImage.create({normalImage: "/resources/fish.png",
                                                     selectedImage:"/resources/fish.png",
                                                    callback: util.callback(this, 'clickCallback')});
-        img.set('rotation',initData.startAngle);
+        //img.set('rotation',initData.startAngle);
                                                
         var menu = cocos.nodes.Menu.create({items: [img]});
         menu.set('position', ccp(0, 0));
-        this.addChild({child: menu, z: -1});
+        this.addChild({child: menu, z: 11});
         this.set('contentSize',img.get('contentSize'));
 
-        var action, actionBack, seq;
+/*        var action, actionBack, seq;
         action = actions.RotateBy.create({duration: 1.25, angle: initData.diffAngle});
         actionBack = action.reverse();
         seq = actions.Sequence.create({actions: [action, actionBack]});
         img.runAction(actions.RepeatForever.create(seq));
-        
+        */
         this.addCallback(util.callback(this,'hitCallback'));
         
         this.scheduleUpdate();
-        this.set('elapsedTime',initData.position*5);
 	},
 	update: function(dt) {
         var pos = util.copy(this.get('position')),
-            et  = util.copy(this.get('elapsedTime')),
-        	dPos = util.copy(this.get('defaultPosition'));
+            v = util.copy(this.get('velocity')),
+            z = util.copy(this.get('zOrder'));
         
-        et += dt;
-        pos.x = 10*Math.cos(2*Math.PI*et/5)+dPos.x;
-        pos.y = 10*Math.sin(4*Math.PI*et/5)+dPos.y;
+        v.y += 9.8*dt;
+        pos.x += v.x*dt*5;
+        pos.y += v.y*dt*5;
+        
+        
+        var s = cocos.Director.get('sharedDirector').get('winSize');
+        if(pos.x>s.width+200){
+                pos.x = 2*(s.width+200)-pos.x;
+                v.x = -v.x;
+            }
+        else if(pos.x<-0){
+                pos.x = -pos.x;
+                v.x = -v.x;
+            }
+        else if(pos.y>s.height){
+                pos.y = s.height;
+                v.y = -v.y;
+            }
  
         this.set('position', pos);
-        this.set('elapsedTime',et);
+        this.set('velocity',v);
     },
     setPosition: function(pos){
     	var Pos = new geom.Point(pos.x+50,pos.y+50);
     	this.set('position',Pos);
-    	this.set('defaultPosition',Pos);
     },
     clickCallback: function(){
         var list = util.copy(this.get('funclist'));
