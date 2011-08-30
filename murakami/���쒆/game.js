@@ -5,10 +5,13 @@ window.onload = function() {
 	game.preload('chara0.gif');
 	game.onload = function() {
 
+
+
 		var home = new Scene();
 		var dungeon = new Scene();
 		var shop = new Scene();
 		var oganization = new Scene();
+		var myDungeon = new Scene();
 
 		game.replaceScene(home);		
 
@@ -24,29 +27,40 @@ window.onload = function() {
 //		alert(arr.pop().name);
 //		alert(arr.pop().name);
 
+		
+		var formationLabel = new Label(); // ダンジョンを守るモンスターの編隊のラベル（ラベル化することでxy座標を自由に変えられる）
+		formationLabel._element.setAttribute('class','button');
+		formationLabel.x = 0
+		formationLabel.text = getListDiv() // ラベルのテキスト要素にモンスターリストを作成する
+		myDungeon.addChild(formationLabel);
+
+//		game.replaceScene(myDungeon); // ダンジョン編成用のシーンに移動
+
+//		$(myDungeon.element()).append(makeTable())
+		$('#flickable').flickable(); // リストのフリックスクロールを可能にする
+
+		var target // ダブルクリックしたリストの項目番号，インデックス（この項目に対して操作を行う）
+
+//		$('#enemy1').fadeOut(2000)
+//		li.addClass('notice')
 
 
-
-		var enemy_table = new Label();
-		enemy_table._element.setAttribute('class','button');
-		home.addChild(enemy_table);
-		enemy_table.width = game.width/2;
-		enemy_table.x = 0;
-		enemy_table.y = game.height-500;
-		enemy_table.text = '<table style="border:solid 1px black;"><tr><td style="border:solid 1px black;">これは</td><td>テストです。</td></tr></table>';
-		enemy_table.backgroundColor = 'red';
-		enemy_table.font = '4em"Ariar"';
-		enemy_table.addEventListener('touchend',function(e){
-				//タッチ時に処理させたいコード記入部分
-				surface.draw(game.assets['chara0.gif'],e.x,e.y);
-				this.removeEventListener('touchend',arguments.callee);
+		$('.block').each(function(index){ // ダブルクリックしたリストの項目番号を取得する
+			$(this).dblclick(function(){
+				$(this).toggleClass("notice")
+				target = this
+				alert(index)
+				target = index	
+			});
 		});
-		enemy_table.addEventListener('enterframe', function() {
-		});
-      //window.enemy_table = enemy_table
-//		$(enemy_table.element()).fadeOut(2000);
 
+/*
+$('ul').append('<li><div  class="block">Content 1!!</div></li>')
+$('ul').append('<li><div  class="block">Content 2!!</div></li>')
+$('ul').append('<li><div  class="block">Content 3!!</div></li>')
+*/
 
+		/*
 		var sprite = new Sprite(game.width, game.height);
 		var surface = new Surface(game.width, game.height);
 		sprite.image = surface;
@@ -64,8 +78,9 @@ window.onload = function() {
 			surface.context.beginPath();
 			surface.context.strokeRect(0,0,game.width, game.height);
 			surface.context.closePath();
-//			x++;
+			x++;
 		});
+		*/
 
 		var buttonShop = new Label();
 		buttonShop._element.setAttribute('class','button');
@@ -109,9 +124,9 @@ window.onload = function() {
 		buttonoOga.backgroundColor = 'red';
 		buttonoOga.font = '4em"Ariar"';
 		buttonoOga.addEventListener('touchend',function(e){
-				//タッチ時に処理させたいコード記入部分
-				surface.draw(game.assets['chara0.gif'],e.x,e.y);
-				this.removeEventListener('touchend',arguments.callee);
+			game.replaceScene(myDungeon)
+			$('#flickable').flickable(); // リストのフリックスクロールを可能にする
+
 		});
 
 		var buttonGo = new Label();
@@ -126,7 +141,7 @@ window.onload = function() {
 		buttonGo.addEventListener('touchend',function(e){
 				//タッチ時に処理させたいコード記入部分
 //				this.removeEventListener('touchend',arguments.callee);
-				game.replaceScene(dungeon);
+//				game.replaceScene(dungeon);
 //				document.location = "dungeon.html"; 
 		});
 
@@ -244,22 +259,31 @@ function Enemy(name,offence,defence, id, weight)
 	return c;
 }
 
-function myDungeon()
+
+// フリックするためのリストを囲んだdiv要素を返す
+function getListDiv()
 {
-	this.list = [];
-	this.size;
+
+	var html = '<div id="flickable"><ul> <li><div class="block">Content 1</div></li><li><div id="enemy2" class="block">Content 2</div></li><li><div id="enemy3" class="block">Content 3</div></li><li><div class="block">Content 4</div></li><li><div class="block">Content 5</div></li><li><div class="block">Content 6</div></li></ul><div style="clear:both;"></div></div>'
+
+
+	return html
 }
 
 
-function opDungeon()
+/*
+function startTable(id)
 {
-	this.distance;
-	
+	return '<div id="'+ id + '"><ul>'
 }
 
-function Treasure()
+function newItem(title)
 {
-	this.name;
-	this.id;
+	return '<li><div class="block">'+ title +'</div></li>'
 }
 
+function endTable()
+{
+	return '</ul><div style="clear:both;"></div></div>'
+}
+*/
