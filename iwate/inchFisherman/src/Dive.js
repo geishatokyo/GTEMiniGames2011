@@ -1,4 +1,4 @@
-var cocos = require('cocos2d');
+﻿var cocos = require('cocos2d');
 var geom = require('geometry');
 var actions = cocos.actions;
 var ccp = geom.ccp;
