@@ -10,28 +10,39 @@ var Fish = cocos.nodes.Node.extend({
     label:null,
     funclist:[],
     status:null,
-    velocity:{x:20,y:20},
-    //HP:null,length:null,weight:null,size:null,atack:null,defence:null,
+    velocity:null,
+    elapsedTime:null,
+    defaultPosition:null,
+    status:null,
     hit:0,
-	init: function() {
+    dir:0,
+	init: function(no) {
         Fish.superclass.init.call(this);
-        var initData = constant.waveInitDatas(1);
+        this.set('status',constant.fishStatusDatas(no));
         var img = cocos.nodes.MenuItemImage.create({normalImage: "/resources/fish.png",
                                                     selectedImage:"/resources/fish.png",
                                                    callback: util.callback(this, 'clickCallback')});
-        //img.set('rotation',initData.startAngle);
+        
                                                
         var menu = cocos.nodes.Menu.create({items: [img]});
         menu.set('position', ccp(0, 0));
-        this.addChild({child: menu, z: 11});
+        this.addChild({child: menu, z: 0});
         this.set('contentSize',img.get('contentSize'));
+        
+        this.set('elapsedTime',0);
 
-/*        var action, actionBack, seq;
-        action = actions.RotateBy.create({duration: 1.25, angle: initData.diffAngle});
+        var initData = constant.waveInitDatas(1);
+        var action, actionBack, seq;
+        img.set('rotation',initData.startAngle);
+        action = actions.RotateBy.create({duration: 5, angle: initData.diffAngle});
         actionBack = action.reverse();
         seq = actions.Sequence.create({actions: [action, actionBack]});
         img.runAction(actions.RepeatForever.create(seq));
-        */
+        
+        var rand = Math.random();
+        this.set('dir',(rand>0.5)?1:-1);
+        this.set('velocity',{x:Math.random()*100,y:0})
+        
         this.addCallback(util.callback(this,'hitCallback'));
         
         this.scheduleUpdate();
@@ -39,11 +50,13 @@ var Fish = cocos.nodes.Node.extend({
 	update: function(dt) {
         var pos = util.copy(this.get('position')),
             v = util.copy(this.get('velocity')),
-            z = util.copy(this.get('zOrder'));
-        
-        v.y += 9.8*dt;
-        pos.x += v.x*dt*5;
-        pos.y += v.y*dt*5;
+            z = util.copy(this.get('zOrder')),
+            et  = util.copy(this.get('elapsedTime'));
+            
+        et+=dt;
+        v.y = 100*Math.cos(et)*this.get('dir');
+        pos.x += v.x*dt;
+        pos.y += v.y*dt;
         
         
         var s = cocos.Director.get('sharedDirector').get('winSize');
@@ -55,16 +68,14 @@ var Fish = cocos.nodes.Node.extend({
                 pos.x = -pos.x;
                 v.x = -v.x;
             }
-        else if(pos.y>s.height){
-                pos.y = s.height;
-                v.y = -v.y;
-            }
  
         this.set('position', pos);
         this.set('velocity',v);
+        this.set('elapsedTime',et);
     },
     setPosition: function(pos){
-    	var Pos = new geom.Point(pos.x+50,pos.y+50);
+        var size = this.get('contentSize');
+    	var Pos = new geom.Point(pos.x+size.width/2,pos.y+size.height/2);
     	this.set('position',Pos);
     },
     clickCallback: function(){
@@ -80,7 +91,9 @@ var Fish = cocos.nodes.Node.extend({
     },
     hitCallback: function(){
         var hit = util.copy(this.get('hit'));
+        var sts = util.copy(this.get('status'));
         hit++;
+        if(sts.attack>3);
         this.set('hit',hit);
     }
 });

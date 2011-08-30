@@ -10,7 +10,12 @@ var Player = cocos.nodes.Node.extend({
 	elapsedTime:null,
 	defaultPosition:null,
     status:null,
+    items:{boat:null,harpoon:null,chum:null},
 	init: function() {
+        this.setup();
+        this.set('status',{hp:100,HP:100,level:1,attack:1,defence:1});
+	},
+    setup: function(){
         Player.superclass.init.call(this);
         var initData = constant.waveInitDatas(0);
         var sprite = cocos.nodes.Sprite.create({
@@ -27,11 +32,10 @@ var Player = cocos.nodes.Node.extend({
         actionBack = action.reverse();
         seq = actions.Sequence.create({actions: [action, actionBack]});
         sprite.runAction(actions.RepeatForever.create(seq));
-        this.set('status',{hp:90,HP:100,level:1,atack:1,defence:1});
         
         this.scheduleUpdate();
         this.set('elapsedTime',initData.position*5);
-	},
+    },
 	update: function(dt) {
         var pos = util.copy(this.get('position')),
             et  = util.copy(this.get('elapsedTime')),

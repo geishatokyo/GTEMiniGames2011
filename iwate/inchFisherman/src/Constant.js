@@ -15,9 +15,33 @@
                      {name:"マグロ",length:3000,weight:400000,hp:1,attack:1,defence:0,size:1},
                      {name:"ダイオウイカ",length:20000,weight:5000000,hp:1,attack:1,defence:0,size:1}
                     ];
+    var boatArray = [{name:'おわん',size:10,file:'owan.png'}];
+    var harpoonArray = [{name:'はり',attack:1,amount:10,file:'hari.png'}];
+    var chumArray = [{name:'オキアミ',attribute:0,power:1,file:'komase.png'}];
     return {
         waveInitDatas: function(index){
             return waveArray[index];
+        },
+        fishStatusDatas: function(index){
+            return fishArray[index];
+        },
+        boatDatas: function(index){
+            return boatArray[index];
+        },
+        harpoonDatas: function(index){
+            return harpoonArray[index];
+        },
+        chumDatas: function(index){
+            return chumArray[index];
+        },
+        boatArray:function(){
+            return boatArray;
+        },
+        harpoonArray: function(){
+            return harpoonArray;
+        },
+        chumArray: function(){
+            return chumArray;
         }
     };
 }();
