@@ -17,6 +17,8 @@ var Box2ddemo = cocos.nodes.Layer.extend({
 	Bullet: null,
 	world: null,
     bodies: null,
+    holes: null,
+    contact: null,
     selectedBody: null,
     mouseJoint: null,
     init: function() {
@@ -25,6 +27,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         
         this.set('isMouseEnabled', true);
         this.set('bodies', []);
+        this.set('holes', []);
 
         // Get size of canvas
         var s = cocos.Director.get('sharedDirector').get('winSize');
@@ -78,7 +81,6 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     	this.addChild(sprite);
     	return sprite;	
     },
-    
     createBall: function(point, scale){
     	scale = scale || 1;
     	var sprite = cocos.nodes.Sprite.create({file:'/resources/ball.png'});
@@ -88,13 +90,20 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     	return sprite;
     },
     createShot: function(point, scale,velocity,angle){
-    	console.log(velocity);
     	scale = scale || 1;
     	var sprite = cocos.nodes.Sprite.create({file:'/resources/ball.png'});
     	sprite.set('position',point);
     	sprite.set('scale',scale);
     	sprite.set('velocity',velocity);
     	sprite.set('angle',angle);
+    	this.addChild(sprite);
+    	return sprite;
+    },
+    createHole: function(point,scale){
+    	scale = scale || 1;
+    	var sprite = cocos.nodes.Sprite.create({file:'/resources/ball.png'});
+    	sprite.set('position',point);
+    	sprite.set('scale',scale);
     	this.addChild(sprite);
     	return sprite;
     },
@@ -106,29 +115,48 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     	world.Step(dt, 10, 10);
     	world.ClearForces();
     	
-    	var bodies = this.get('bodies');
+    	var bodies = this.get('bodies'),
+    		holes = this.get('holes');
     	for(var i = 0, len = bodies.length; i < len; i++){
-    		var body = bodies[i],
-    			pos = body.GetPosition(),
-    			angle = geo.radiansToDegrees(body.GetAngle());
-    		body.sprite.set('position', new geo.Point(pos.x * 30, pos.y * 30));
-    		body.sprite.set('rotation',angle);    		
+    		for(var j = 0, hlen = holes.length; j < hlen; j++){
+    			var body = bodies[i],
+    				pos = body.GetPosition(),
+    				angle = geo.radiansToDegrees(body.GetAngle());
+    			body.sprite.set('position', new geo.Point(pos.x * 30, pos.y * 30));
+    			body.sprite.set('rotation',angle);
+    			var hole = holes[j],
+    				hpos = hole.GetPosition();
+    			if(Math.sqrt(Math.pow(pos.x-hpos.x,2)+Math.pow(pos.y-hpos.y,2))<=0.75){
+    				//console.log(body);
+    				world.DestroyBody(body);
+    			}
+    		}	
+    		    		
     	}
+    	this.testHoleCollision();
     },
-    testHoleCollisio: function(){
-    	var world = this.get('world');
-    	var holePosX,
-    		holePosY;
+    testHoleCollision: function(){
+    	var world = this.get('world'),
+    		contact = this.get('contact'),
+    		bodies = this.get('bodies'),
+    		holes = this.get('holes');
+    	//console.log(contact.IsTouching());
+    	//console.log(holes);
+    	console.log(bodies);
+    	//world.DestroyBody(hole);
+    	
     },
     
     demo: function() {
     	var world = new box2d.b2World(new box2d.b2Vec2(0,0),true);
     	this.set('world',world);
+    	var contact = new box2d.b2Contact;
+    	this.set('contact',contact);
     	
     	var fixDef = new box2d.b2FixtureDef;
-    	fixDef.density = 10.0;
+    	fixDef.density = 1.0;
     	fixDef.friction = 1.0;
-    	fixDef.restitution = 0.8;
+    	fixDef.restitution = 1.0;
     	var bodyDef = new box2d.b2BodyDef;
     	
     	//create ground
@@ -144,8 +172,23 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         fixDef.shape.SetAsBox(4, 14);
         bodyDef.position.Set(1, 13);
         world.CreateBody(bodyDef).CreateFixture(fixDef);
-        bodyDef.position.Set(22, 13);
+        bodyDef.position.Set(23, 13);
         world.CreateBody(bodyDef).CreateFixture(fixDef);
+    	
+    	//create Hole
+    	fixDef.shape = new box2d.b2CircleShape(0.5);
+    	fixDef.isSensor = true;
+    	for(var i = 0; i < 3; i++){
+    		bodyDef.position.x = 18;
+    		bodyDef.position.y = 14/3*i+14/6;
+    		sprite = this.createHole(new geo.Point(bodyDef.position.x * 30, bodyDef.position.y * 30), scale);
+    		var hole = world.CreateBody(bodyDef);
+            hole.sprite = sprite;
+        	this.get('holes').push(hole);
+        	hole.CreateFixture(fixDef);	
+    	}
+    	
+        fixDef.isSensor = false;
     	
     	//create some objects
         bodyDef.type = box2d.b2Body.b2_dynamicBody;
@@ -200,6 +243,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
             this.get('bodies').push(bdy);
             bdy.CreateFixture(fixDef);
 		}
+		fixDef.isSensor = true;
     },
     
     getBodyAtPoint: function(point){
@@ -311,7 +355,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     		rotation = util.copy(barrel.get('rotation'));
     	
     	var fixDef = new box2d.b2FixtureDef;
-    	fixDef.density = 100.0;
+    	fixDef.density = 8.0;
     	fixDef.friction = 1.0;
     	fixDef.restitution = 1.0;
     	var bodyDef = new box2d.b2BodyDef;
@@ -321,7 +365,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         bodyDef.position.y = (position.y)*14/420;
         bodyDef.linearVelocity.x = 10*Math.cos(Math.PI*rotation/180);
         bodyDef.linearVelocity.y = 10*Math.sin(Math.PI*rotation/180);
-        bodyDef.linearDamping = 0.1;
+        bodyDef.linearDamping = 0.3;
         bodyDef.angularDamping = 0.5;
         var scale = 0.5,
             width = scale * 30;
