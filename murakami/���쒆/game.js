@@ -18,41 +18,123 @@ window.onload = function() {
  		var player = new Player("taro",1,1);
 		var enemy = new Enemy("ziro",1,1,"001",100);
 		
+		/*
 		var arr = [];
 		arr.push(player);
 		arr.push(enemy);
 		arr.push(player);
 		arr.splice(arr.indexOf(enemy),1 )
+		*/
 //		alert(arr.indexOf(enemy));
 //		alert(arr.pop().name);
 //		alert(arr.pop().name);
 
-		
-		var formationLabel = new Label(); // ダンジョンを守るモンスターの編隊のラベル（ラベル化することでxy座標を自由に変えられる）
-		formationLabel._element.setAttribute('class','button');
-		formationLabel.x = 0
-		formationLabel.text = getListDiv() // ラベルのテキスト要素にモンスターリストを作成する
-		myDungeon.addChild(formationLabel);
+		var majorList = [];
+		majorList.push(Enemy("major1",1,2,"001",1));
+		majorList.push(Enemy("major2",2,5,"002",2));
+		majorList.push(Enemy("major3",5,7,"003",3));
+		majorList.push(Enemy("major4",13,5,"004",4));
+		majorList.push(Enemy("major5",21,9,"005",5));
+		majorList.push(Enemy("major6",11,11,"006",4));
+		majorList.push(Enemy("major7",8,28,"007",5));
+		majorList.push(Enemy("major8",18,19,"008",6));
+		majorList.push(Enemy("major9",33,15,"009",7));
+		majorList.push(Enemy("major10",29,11,"010",6));
+//		alert(majorList[0].name)
+//		alert(majorList.pop().name)
 
-//		game.replaceScene(myDungeon); // ダンジョン編成用のシーンに移動
+		var minorList = [];
+		minorList.push(Enemy("minor1",5,2,"001",3));
+		minorList.push(Enemy("minor2",2,1,"002",1));
+		minorList.push(Enemy("minor3",11,13,"003",4));
+		minorList.push(Enemy("minor4",13,22,"004",5));
+		minorList.push(Enemy("minor5",13,11,"005",4));
+		minorList.push(Enemy("minor6",15,13,"006",5));
+		minorList.push(Enemy("minor7",2,3,"007",1));
+		minorList.push(Enemy("minor8",3,3,"008",2));
+		minorList.push(Enemy("minor9",33,4,"009",4));
+		minorList.push(Enemy("minor10",3,7,"010",3));
 
-//		$(myDungeon.element()).append(makeTable())
-		$('#flickable').flickable(); // リストのフリックスクロールを可能にする
+		game.replaceScene(myDungeon); // ダンジョン編成用のシーンに移動
+	
+		var majorEnemy = new Label(); // ダンジョンを守るモンスターの編隊のラベル（ラベル化することでxy座標を自由に変えられる）
+		majorEnemy._element.setAttribute('class','button');
+		majorEnemy.x = 0
+		majorEnemy.text = makeFlickableList("major",majorList) // ラベルのテキスト要素にモンスターリストを作成する
+		myDungeon.addChild(majorEnemy);
 
-		var target // ダブルクリックしたリストの項目番号，インデックス（この項目に対して操作を行う）
+		var minorEnemy = new Label(); // モンスターの予備編隊のラベル
+		minorEnemy._element.setAttribute('class','button');
+		minorEnemy.x = 330
+		minorEnemy.text = makeFlickableList("minor",minorList) // ラベルのテキスト要素にモンスターリストを作成する
+		myDungeon.addChild(minorEnemy);
 
-//		$('#enemy1').fadeOut(2000)
-//		li.addClass('notice')
+		$('#major').flickable(); // リストのフリックスクロールを可能にする
+		$('#minor').flickable();
 
-
+		/*
 		$('.block').each(function(index){ // ダブルクリックしたリストの項目番号を取得する
 			$(this).dblclick(function(){
-				$(this).toggleClass("notice")
-				target = this
-				alert(index)
+		//		$(this).toggleClass("notice")
 				target = index	
 			});
 		});
+		*/
+
+		var majorIdx
+		var minorIdx
+		var pre1 = $("#major.block")
+		var pre2 = $("#minor.block")
+	
+		$('#major').find(".block").each(function(index){
+			$(this).dblclick(function(){
+				pre1.removeClass("notice")
+				$(this).addClass("notice")
+				majorIdx = index
+				pre1 = $(this)
+//				alert(majorIdx)
+			});
+		});
+
+
+		$('#minor').find(".block").each(function(index){
+			$(this).dblclick(function(){
+				pre2.removeClass("notice")
+				$(this).addClass("notice")
+				minorIdx = index
+				pre2 = $(this)
+//				alert(minorIdx)
+			});
+		});
+
+		var buttonChange = new Label();
+		buttonChange._element.setAttribute('class','css3button');
+		myDungeon.addChild(buttonChange);
+		buttonChange.width = 100;
+		buttonChange.x = game.width/2;
+		buttonChange.y = game.height-160;
+		buttonChange.text = 'チェンジ';
+//		buttonChange.backgroundColor = 'red';
+		buttonChange.font = '2em"Ariar"';
+		buttonChange.addEventListener('touchend',function(e){ // 1軍と2軍で選んだ項目を入れ替え
+			var content1
+			var content2
+			$('#major').find(".block").each(function(index){
+				if(index == majorIdx){ // 1軍の選択したインデックス番号のとき
+					content1 = $(this).text() // 1軍の要素のテキストを保持
+					$('#minor').find(".block").each(function(index){ // 2軍の選択したインデックス番号のとき
+						if(index == minorIdx){
+							content2 = $(this).text() // 2軍要素のテキストを保持
+							$(this).text(content1) // 2軍要素のテキストを1軍要素のテキストに入れ替え
+						}
+					});
+					$(this).text(content2) // 1軍要素のテキストを2軍用要素のテキストに入れ替え
+				}
+			});
+		});
+
+
+
 
 /*
 $('ul').append('<li><div  class="block">Content 1!!</div></li>')
@@ -125,8 +207,15 @@ $('ul').append('<li><div  class="block">Content 3!!</div></li>')
 		buttonoOga.font = '4em"Ariar"';
 		buttonoOga.addEventListener('touchend',function(e){
 			game.replaceScene(myDungeon)
-			$('#flickable').flickable(); // リストのフリックスクロールを可能にする
-
+			$('#major').flickable(); // リストのフリックスクロールを可能にする
+			$('.block').each(function(index){ // ダブルクリックしたリストの項目番号を取得する
+				$(this).dblclick(function(){
+					$(this).toggleClass("notice")
+					target = this
+					alert(this)
+					target = index	
+				});
+			});
 		});
 
 		var buttonGo = new Label();
@@ -261,13 +350,21 @@ function Enemy(name,offence,defence, id, weight)
 
 
 // フリックするためのリストを囲んだdiv要素を返す
-function getListDiv()
+function makeFlickableList(id, list)
 {
+	var tag = '<div id="'+id+'" class="flickable"><ul>'
+	for(i = 0 ; i<10 ; i++){
+		tag += '<li><div class="block">'+ getPermeate(list[i]) +'</div></li>' // リストを1項目ずつ作成
+	}
+	tag += '</ul><div style="clear:both;"></div></div>'
 
-	var html = '<div id="flickable"><ul> <li><div class="block">Content 1</div></li><li><div id="enemy2" class="block">Content 2</div></li><li><div id="enemy3" class="block">Content 3</div></li><li><div class="block">Content 4</div></li><li><div class="block">Content 5</div></li><li><div class="block">Content 6</div></li></ul><div style="clear:both;"></div></div>'
 
+	return tag
+}
 
-	return html
+function getPermeate(character)
+{
+	return '<div>'+ character.name +'<br>攻撃力：'+ character.offence +'<br>守備力：'+ character.defence +'</div>'
 }
 
 
