@@ -2,7 +2,7 @@
 
 window.onload = function() {
 	var game = new Game(640, 520);
-	game.preload('chara0.gif');
+	game.preload('chara0.gif','mainview.png');
 	game.onload = function() {
 
 
@@ -44,7 +44,7 @@ window.onload = function() {
 //		alert(majorList.pop().name)
 
 		var minorList = [];
-		minorList.push(Enemy("minor1",5,2,"001",3));
+		minorList.push(Enemy("minor1",5,27,"001",5));
 		minorList.push(Enemy("minor2",2,1,"002",1));
 		minorList.push(Enemy("minor3",11,13,"003",4));
 		minorList.push(Enemy("minor4",13,22,"004",5));
@@ -55,7 +55,15 @@ window.onload = function() {
 		minorList.push(Enemy("minor9",33,4,"009",4));
 		minorList.push(Enemy("minor10",3,7,"010",3));
 
-		game.replaceScene(myDungeon); // ダンジョン編成用のシーンに移動
+
+
+
+//		game.replaceScene(myDungeon); // ダンジョン編成用のシーンに移動
+		game.replaceScene(dungeon);
+
+
+
+
 	
 		var majorEnemy = new Label(); // ダンジョンを守るモンスターの編隊のラベル（ラベル化することでxy座標を自由に変えられる）
 		majorEnemy._element.setAttribute('class','button');
@@ -85,6 +93,10 @@ window.onload = function() {
 		var minorIdx
 		var pre1 = $("#major.block")
 		var pre2 = $("#minor.block")
+
+		
+
+
 	
 		$('#major').find(".block").each(function(index){
 			$(this).dblclick(function(){
@@ -95,7 +107,6 @@ window.onload = function() {
 //				alert(majorIdx)
 			});
 		});
-
 
 		$('#minor').find(".block").each(function(index){
 			$(this).dblclick(function(){
@@ -119,19 +130,24 @@ window.onload = function() {
 		buttonChange.addEventListener('touchend',function(e){ // 1軍と2軍で選んだ項目を入れ替え
 			var content1
 			var content2
-			$('#major').find(".block").each(function(index){
+			$('#major').find("li").each(function(index){
 				if(index == majorIdx){ // 1軍の選択したインデックス番号のとき
-					content1 = $(this).text() // 1軍の要素のテキストを保持
-					$('#minor').find(".block").each(function(index){ // 2軍の選択したインデックス番号のとき
+					content1 =  $(this) // 1軍の要素のテキストを保持
+					$('#minor').find("li").each(function(index){ // 2軍の選択したインデックス番号のとき
 						if(index == minorIdx){
-							content2 = $(this).text() // 2軍要素のテキストを保持
-							$(this).text(content1) // 2軍要素のテキストを1軍要素のテキストに入れ替え
+							content2 = $(this) // 2軍要素のテキストを保持
+						}
+						if(index == minorIdx + 1){
+							$(this).before(content1) // 2軍要素のテキストを1軍要素のテキストに入れ替え
 						}
 					});
-					$(this).text(content2) // 1軍要素のテキストを2軍用要素のテキストに入れ替え
+				}
+				if(index == majorIdx +1){
+					$(this).before(content2) // 1軍要素のテキストを2軍用要素のテキストに入れ替え
 				}
 			});
 		});
+
 
 
 
@@ -230,7 +246,7 @@ $('ul').append('<li><div  class="block">Content 3!!</div></li>')
 		buttonGo.addEventListener('touchend',function(e){
 				//タッチ時に処理させたいコード記入部分
 //				this.removeEventListener('touchend',arguments.callee);
-//				game.replaceScene(dungeon);
+				game.replaceScene(dungeon);
 //				document.location = "dungeon.html"; 
 		});
 
@@ -251,6 +267,26 @@ $('ul').append('<li><div  class="block">Content 3!!</div></li>')
 
 		/************************************************************/
 
+		var enemyList = [];
+		enemyList.push(Enemy("enemy1",1,1,"001",1));
+		enemyList.push(Enemy("enemy2",3,2,"002",2));
+		enemyList.push(Enemy("enemy3",4,2,"003",3));
+		enemyList.push(Enemy("enemy4",4,5,"004",3));
+		enemyList.push(Enemy("enemy5",6,7,"005",4));
+		enemyList.push(Enemy("enemy6",8,9,"006",4));
+		enemyList.push(Enemy("enemy7",10,11,"007",4));
+		enemyList.push(Enemy("enemy8",15,8,"008",4));
+		enemyList.push(Enemy("enemy9",16,17,"009",4));
+		enemyList.push(Enemy("enemy10",20,15,"010",5));
+
+		var opdun = new opDungeon(100,enemyList)
+
+		var defaultPhase = 1 // 通路にいるときをあらわす定数
+		var battlePhase = 2 // 戦闘中をあらわす定数
+		var forkPhase = 3 // 分かれ道にいるときを表す定数
+
+		var phase = defaultPhase // ダンジョンでの状態を表すフラグ
+
 		var buttonFoward = new Label();
 		buttonFoward._element.setAttribute('class','button');
 		dungeon.addChild(buttonFoward);
@@ -262,11 +298,40 @@ $('ul').append('<li><div  class="block">Content 3!!</div></li>')
 		buttonFoward.font = '4em"Ariar"';
 		buttonFoward.addEventListener('touchend',function(e){
 				//タッチ時に処理させたいコード記入部分
-				surface.draw(game.assets['chara0.gif'],e.x,e.y);
-				this.removeEventListener('touchend',arguments.callee);
-		});
-		buttonFoward.addEventListener('enterframe', function() {
-
+				player.health--
+				healthInfo.text = player.health+"/"+player.healthmax;
+				switch(phase){
+					case defaultPhase:
+						switch(randomRange(0,4)){
+							case 0:
+								mesbox.text = "なにもみつからなかった"
+								phase = defaultPhase
+								break
+							case 1:
+								mesbox.text = "アイテムをみつけた!!"
+								phase = defaultPhase
+								break
+							case 2:
+								mesbox.text = ""+ opdun.enemyList[randomRange(0,10)].name + "があらわれた"
+								buttonFoward.text = 'たたかう';
+								phase = battlePhase
+								break
+							case 3:
+								mesbox.text = "分かれ道だ"
+								phase = forkPhase
+								break
+						}
+						break;
+					case battlePhase:
+						mesbox.text = "モンスターに勝利した"
+						buttonFoward.text = '進む';						
+						phase = defaultPhase;
+						break;
+					case forkPhase:
+						mesbox.text = "分かれ道を選んだ"
+						phase = defaultPhase;
+						break
+				}
 		});
 
 		var buttonRetire = new Label();
@@ -284,16 +349,16 @@ $('ul').append('<li><div  class="block">Content 3!!</div></li>')
 				game.replaceScene(home);
 		});
 
-		var mesbox1 = new Label();
-		mesbox1._element.setAttribute('class','messagebox');
-		dungeon.addChild(mesbox1);
-		mesbox1.width = game.width;
-		mesbox1.height = 115;
-		mesbox1.x = 0;
-		mesbox1.y = game.height-200;
-		mesbox1.text = enemy.name+" "+enemy.offence+" "+enemy.defence+" "+enemy.health+" "+enemy.id+"あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ";
-		mesbox1.backgroundColor = 'blue';
-		mesbox1.font = '2em"Ariar"';
+		var mesbox = new Label();
+		mesbox._element.setAttribute('class','messagebox');
+		dungeon.addChild(mesbox);
+		mesbox.width = game.width;
+		mesbox.height = 115;
+		mesbox.x = 0;
+		mesbox.y = game.height-200;
+		mesbox.text = "ダンジョンの入り口だ";
+//		mesbox.backgroundColor = 'blue';
+		mesbox.font = '2em"Ariar"';
 
 		var healthInfo = new Label();
 		dungeon.addChild(healthInfo);
@@ -309,12 +374,22 @@ $('ul').append('<li><div  class="block">Content 3!!</div></li>')
 		levelInfo.font = '2em"Ariar"';
 		levelInfo.text = "Lv:"+player.level;
 
+
+		var view = new Sprite(game.width, 200);
+		view.image = game.assets['mainview.png']
+		dungeon.addChild(view);
+		view.x = 0
+		view.y = 100
+
 		/************************************************************/
-
-
 	}
 	game.start();
 
+}
+
+function randomRange(min,max)
+{
+	return Math.floor( Math.random() * max + min)
 }
 
 function Character(name,offence,defence)
@@ -348,12 +423,17 @@ function Enemy(name,offence,defence, id, weight)
 	return c;
 }
 
+function opDungeon(size, enemyList)
+{
+	this.size = size
+	this.enemyList = enemyList
+}
 
 // フリックするためのリストを囲んだdiv要素を返す
 function makeFlickableList(id, list)
 {
 	var tag = '<div id="'+id+'" class="flickable"><ul>'
-	for(i = 0 ; i<10 ; i++){
+	for(i = 0 ; i<list.length ; i++){
 		tag += '<li><div class="block">'+ getPermeate(list[i]) +'</div></li>' // リストを1項目ずつ作成
 	}
 	tag += '</ul><div style="clear:both;"></div></div>'
