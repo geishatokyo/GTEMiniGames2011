@@ -22,6 +22,7 @@ var Breakout = cocos.nodes.Layer.extend({
     boatSize:0,
     harpoon:null,
     harpoonAmount:null,
+    charBoard:null,
     init: function(player) {
         // You must always call the super class version of init
         Breakout.superclass.init.call(this);
@@ -34,12 +35,7 @@ var Breakout = cocos.nodes.Layer.extend({
             }
         }
 
-        for(var i=0;i<3;i++){
-        var fish = Fish.create(Math.floor( Math.random() * 13 ));
-        fish.addCallback(util.callback(this,'hitCallback'));
-        fish.setPosition( new geo.Point(s.width*Math.random(), s.height/4*(i+1)));
-        this.addChild({child: fish,z:2*i+1});
-        }
+        
 		
         player.setPosition(new geo.Point(s.width/2, s.height-70));
         this.addChild({child: player,z:8});
@@ -103,6 +99,39 @@ var Breakout = cocos.nodes.Layer.extend({
         var menu = cocos.nodes.Menu.create({items: [button]});
         menu.set('position', new geo.Point(0,s.height-10));
         this.addChild({child: menu, z: 9});
+        
+        var cb = [];
+        var sprite = cocos.nodes.Sprite.create({ file: '/resources/char_back.png' });
+        sprite.set('position', new geo.Point(s.width/2+25,s.height/2+80));
+        sprite.set('scaleX',1.5);sprite.set('scaleY',1.5);
+        this.addChild({child: sprite,z:20});
+        cb.push(sprite);
+        var size = sprite.get('contentSize');
+        var l = cocos.nodes.Label.create({string: player.get('items').chum.name + 'をまいた...',
+                                        fontName: "Thonburi",
+                                        fontSize: 12,
+                                       fontColor: '#502d16'});
+        l.set('position', new geo.Point(size.width/2,size.height/2));
+        sprite.addChild({child: l, z: 0});
+        this.set('charBoard',cb);
+        window.setTimeout(
+            util.callback(this, 'removeCharBoard'),1500
+        );
+        window.setTimeout(
+            util.callback(this, 'createFishs'),3000
+        );
+    },
+    createFishs: function(){
+        for(var i=0;i<3;i++){
+            this.createFish(i);
+        }
+    },
+    createFish: function(i){
+        var s = cocos.Director.get('sharedDirector').get('winSize');
+        var fish = Fish.create(Math.floor( Math.random() * 12 ));
+        fish.addCallback(util.callback(this,'hitCallback'));
+        fish.setPosition( new geo.Point(s.width*Math.floor(Math.random()*100), s.height/4*(i+1)));
+        this.addChild({child: fish,z:2*i+1});
     },
     update: function(){
         var p = this.get('player');
@@ -142,17 +171,92 @@ var Breakout = cocos.nodes.Layer.extend({
                 this.addChild({child: l, z: 11});
                 this.set('harpoon',l);
                 this.set('harpoonAmount',h);
+                var s = cocos.Director.get('sharedDirector').get('winSize');
+                try{
+                    this.removeChild({child:this.get('hit'),cleanup:true});
+                }catch(e){}
+                var l = cocos.nodes.Label.create({string: 'MISS!',
+                                                fontName: "Thonburi",
+                                                fontSize: 64,
+                                               fontColor: '#FF0000'});
+                l.set('position', new geo.Point(s.width-80, s.height-50));
+                this.set('hit',l);
+                this.addChild({child: l, z: 8});
+                window.setTimeout(
+                    util.callback(this, 'removeHitLabel'),500
+                );
             }
         }
                 
         return true;
     },
-    hitCallback: function(pos){
+    hitCallback: function(fish){
+        var s = cocos.Director.get('sharedDirector').get('winSize');
         var h = this.get('harpoonAmount');
         h--;
         if(h<0) {
             h=0
         }else{
+            var fsts = util.copy(fish.get('status'));
+            console.log('name:'+fsts.name+' HP:'+fsts.hp +' Length:'+fsts.length);
+            fsts.hp--;
+            fish.set('status',fsts);
+            if(fsts.hp<=0){
+                var cb = [];
+                try{
+                    var cb = this.get('charBoard');
+                    for(i=0;i<cb.length;i++){
+                        this.removeChild({child:cb[i],cleanup:true});
+                    }
+                }catch(e){}
+                var sprite = cocos.nodes.Sprite.create({ file: '/resources/char_back.png' });
+                sprite.set('position', new geo.Point(s.width/2+25,s.height/2+80));
+                sprite.set('scaleX',1.5);sprite.set('scaleY',1.5);
+                this.addChild({child: sprite,z:20});
+                cb.push(sprite);
+                var size = sprite.get('contentSize');
+                var bs = this.get('boatSize');
+                bs += fsts.size;
+                var time = 1000;
+                if(bs>this.get('player').get('items').boat.size){
+                    bs-=fsts.size;
+                    var l = cocos.nodes.Label.create({string: '船がいっぱいです！',
+                                                    fontName: "Thonburi",
+                                                    fontSize: 12,
+                                                   fontColor: '#502d16'});
+                    l.set('position', new geo.Point(size.width/2,size.height/2));
+                    sprite.addChild({child: l, z: 0});
+                }else{
+                    var l = cocos.nodes.Label.create({string: fsts.name + '、獲ったど～！',
+                                                    fontName: "Thonburi",
+                                                    fontSize: 12,
+                                                   fontColor: '#502d16'});
+                    l.set('position', new geo.Point(size.width/2,size.height/2));
+                    sprite.addChild({child: l, z: 0});
+                    var dict = this.get('player').dict;
+                    if(dict[fsts.name] == undefined||dict[fsts.name]>fsts.length){
+                        l.set('position', new geo.Point(size.width/2,size.height/2-10));
+                        var l = cocos.nodes.Label.create({string: fsts.name+' : '+ Math.round(fsts.length*10)/10 + '、最高記録です',
+                                                        fontName: "Thonburi",
+                                                        fontSize: 12,
+                                                       fontColor: '#502d16'});
+                        l.set('position', new geo.Point(size.width/2,size.height/2+10));
+                        sprite.addChild({child: l, z: 0});
+                        dict = fsts.length;
+                        time = 1500;
+                    }
+                }
+                
+                this.set('charBoard',cb);
+                window.setTimeout(
+                    util.callback(this, 'removeCharBoard'),time
+                );
+                var hit = fish.get('hit');
+                h += hit;
+                this.createFish((fish.get('zOrder')-1)/2);
+                this.removeChild({child:fish,cleanup:true});
+                this.set('boatSize',bs);
+            }
             this.removeChild({child:this.get('harpoon'),cleanup:true});
             var l = cocos.nodes.Label.create({string: h.toString(),
                                             fontName: "Thonburi",
@@ -162,7 +266,7 @@ var Breakout = cocos.nodes.Layer.extend({
             this.addChild({child: l, z: 11});
             this.set('harpoon',l);
             this.set('harpoonAmount',h);
-            var s = cocos.Director.get('sharedDirector').get('winSize');
+            
             try{
                 this.removeChild({child:this.get('hit'),cleanup:true});
             }catch(e){}
@@ -176,13 +280,19 @@ var Breakout = cocos.nodes.Layer.extend({
             window.setTimeout(
                 util.callback(this, 'removeHitLabel'),500
             );
-            var dive = Dive.create();
+            /*var dive = Dive.create();
             this.addChild({child:dive,z:8});
-            dive.setPosition(new geo.Point(s.width / 4*3, s.height /2));
+            dive.setPosition(new geo.Point(s.width / 4*3, s.height /2));*/
         }
     },
     removeHitLabel: function(){
         this.removeChild({child:this.get('hit'),cleanup:true});
+    },
+    removeCharBoard: function(){
+        var cb = this.get('charBoard');
+        for(i=0;i<cb.length;i++){
+            this.removeChild({child:cb[i],cleanup:true});
+        }
     },
     buttonCallback: function(){
         var director = cocos.Director.get('sharedDirector');
@@ -523,6 +633,7 @@ var Harbor = cocos.nodes.Layer.extend({
         t += dt;
         
         if(t>5*60){
+            t=0;
             var sts = this.get('player').get('status');
             sts.hp++;
             if(sts.hp>sts.HP) sts.hp = sts.HP;
@@ -543,11 +654,14 @@ var Harbor = cocos.nodes.Layer.extend({
     buttonCallback: function(){
         var director = cocos.Director.get('sharedDirector');
         var p = this.get('player');
-        p.setup();
-        var scene = cocos.nodes.Scene.create();
-        scene.addChild({child: Breakout.create(p)});
-
-        director.replaceScene(scene);
+        var sts = p.get('status');
+        if(sts.hp>10){
+            sts.hp-=10;
+            p.setup();
+            var scene = cocos.nodes.Scene.create();
+            scene.addChild({child: Breakout.create(p)});
+            director.replaceScene(scene);
+        }
     }
 });
 exports.main = function() {
