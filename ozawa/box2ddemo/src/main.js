@@ -89,13 +89,11 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     	this.addChild(sprite);
     	return sprite;
     },
-    createShot: function(point, scale,velocity,angle){
+    createShot: function(point, scale){
     	scale = scale || 1;
     	var sprite = cocos.nodes.Sprite.create({file:'/resources/ball.png'});
     	sprite.set('position',point);
     	sprite.set('scale',scale);
-    	sprite.set('velocity',velocity);
-    	sprite.set('angle',angle);
     	this.addChild(sprite);
     	return sprite;
     },
@@ -117,22 +115,24 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     	
     	var bodies = this.get('bodies'),
     		holes = this.get('holes');
-    	for(var i = 0, len = bodies.length; i < len; i++){
-    		for(var j = 0, hlen = holes.length; j < hlen; j++){
-    			var body = bodies[i],
-    				pos = body.GetPosition(),
-    				angle = geo.radiansToDegrees(body.GetAngle());
-    			body.sprite.set('position', new geo.Point(pos.x * 30, pos.y * 30));
-    			body.sprite.set('rotation',angle);
-    			var hole = holes[j],
-    				hpos = hole.GetPosition();
+   		for(var len = bodies.length-1, i = len; i >= 0; i--){
+   			var body = bodies[i],
+   				pos = body.GetPosition(),
+    			angle = geo.radiansToDegrees(body.GetAngle());
+   			body.sprite.set('position', new geo.Point(pos.x * 30, pos.y * 30));
+   			body.sprite.set('rotation',angle);
+   			for(var j = 0, hlen = holes.length; j < hlen; j++){
+   				//console.log(bodies.length,i,body);
+   				var hole = holes[j],
+   					hpos = hole.GetPosition();
     			if(Math.sqrt(Math.pow(pos.x-hpos.x,2)+Math.pow(pos.y-hpos.y,2))<=0.75){
-    				//console.log(body);
-    				world.DestroyBody(body);
-    			}
-    		}	
-    		    		
-    	}
+   					this.removeChild({child:body.sprite,cleanup:true});
+   					world.DestroyBody(body);
+   					bodies.splice(i,1)
+   				}
+   			}
+   		}   		
+   	
     	this.testHoleCollision();
     },
     testHoleCollision: function(){
@@ -142,7 +142,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     		holes = this.get('holes');
     	//console.log(contact.IsTouching());
     	//console.log(holes);
-    	console.log(bodies);
+    	//console.log(bodies);
     	//world.DestroyBody(hole);
     	
     },
@@ -274,8 +274,10 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     mouseDown: function(evt) {
         var point = evt.locationInCanvas,
             world = this.get('world'),
-            mouseJoint = this.get('mouseJoint');
-
+            mouseJoint = this.get('mouseJoint'),
+            barrel = this.get('barrel'),
+            bullet = this.get('bullet');
+			
         if (!mouseJoint) {
             var body = this.getBodyAtPoint(point);
             if(body) {
@@ -290,51 +292,93 @@ var Box2ddemo = cocos.nodes.Layer.extend({
                 this.set('mouseJoint', mouseJoint);
             }
         }
-    },
-    
+        
+        if(!barrel.mouseConect){
+        	var pos = util.copy(barrel.get('position')),
+        		rot = util.copy(barrel.get('rotaiton')),
+        		slope = Math.tan(Math.PI*rot/180),
+        		intercept = 16/Math.cos(Math.PI*rot/180);
+        	if(point.x>=pos.x-64-16 && point.x<=pos.x-16){
+        		if(point.y<=pos.y+8 && point.y>=pos.y-8){
+        			barrel.mouseConect=true;	
+        		}
+        	}
+        }
+        if(!bullet.mouseConect){
+     		var pos = util.copy(bullet.get('position'));  
+     		if(Math.sqrt(Math.pow(pos.x-point.x,2)+Math.pow(pos.y-point.y,2))<=16){
+     			bullet.mouseConect=true;
+     		}
+        	
+        }
+        console.log(barrel.mouseConect,bullet.mouseConect);
+    }, 
     mouseDragged: function(evt) {
         var point = evt.locationInCanvas,
             world = this.get('world'),
-            mouseJoint = this.get('mouseJoint');
-
+            mouseJoint = this.get('mouseJoint'),
+            barrel = this.get('barrel'),
+            bullet = this.get('bullet');
+		//console.log(point,mouseJoint);
         if (mouseJoint) {
             mouseJoint.SetTarget(new box2d.b2Vec2(point.x /30, point.y /30));
         }
-    },
-    
+        if(barrel.mouseConect){
+        	var pos = util.copy(barrel.get('position'));
+        	pos.y = point.y;
+        	barrel.set('position',pos);
+        	bullet.set('position',pos);
+        }
+        if(bullet.mouseConect){
+        	var pos = util.copy(barrel.get('position')),
+        		rot = util.copy(barrel.get('rotation'));
+        	pos.x = -pos.x+point.x;
+        	pos.y = -pos.y+point.y;
+        	rot = Math.atan2(pos.y,pos.x);
+        	barrel.set('rotation',rot*180/Math.PI); 
+        	console.log(pos.x,pos.y,rot*180/Math.PI);
+        }
+    }, 
 	mouseUp: function(evt) {
         var mouseJoint = this.get('mouseJoint'),
-            world = this.get('world');
+            world = this.get('world'),
+            barrel = this.get('barrel'),
+            bullet = this.get('bullet');
 
         if (mouseJoint) {
             world.DestroyJoint(mouseJoint);
             this.set('mouseJoint', null);
         }
+        if(barrel.mouseConect){
+        	barrel.mouseConect=false;
+        }
+        if(bullet.mouseConect){
+        	bullet.mouseConect=false;
+        	this.shotBall();
+        }
+        console.log(barrel.mouseConect,bullet.mouseConect);
    },
+   
    moveUp: function(){
    		var barrel = this.get('barrel'),
         	pos = util.copy(barrel.get('position')),
-        	bullet = this.get('bullet'),
-        	posi = util.copy(bullet.get('position'));   
+        	bullet = this.get('bullet');  
         if(pos.y>(6.5*400/14+10)-10*11){
-        	pos.y -= 10;
-        	posi.y -= 10;	
+        	pos.y -= 10;	
         }
         barrel.set('position',pos);
-        bullet.set('position',posi);
+        bullet.set('position',pos);
         
    },
    moveDown: function(){
    		var barrel = this.get('barrel'),
         	pos = util.copy(barrel.get('position')),
-        	bullet = this.get('bullet'),
-        	posi = util.copy(bullet.get('position'));   
+        	bullet = this.get('bullet');   
        if(pos.y<(6.5*400/14+10)+10*12){
-        	pos.y += 10;
-        	posi.y += 10;	
+        	pos.y += 10;	
         }
         barrel.set('position',pos);
-        bullet.set('position',posi); 
+        bullet.set('position',pos); 
    },
    turnRight: function(){
    		var barrel = this.get('barrel'),
@@ -370,16 +414,11 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         var scale = 0.5,
             width = scale * 30;
         fixDef.shape = new box2d.b2CircleShape(width/30);
-        sprite = this.createShot(new geo.Point(bodyDef.position.x * 30, bodyDef.position.y * 30), scale,
-        							bodyDef.velocity,bodyDef.angle);
-
-        var bullet = world.CreateBody(bodyDef);
-        bullet.sprite = sprite;
-        this.get('bodies').push(bullet);
-        bullet.CreateFixture(fixDef);
-        
-        
-
+        sprite = this.createShot(new geo.Point(bodyDef.position.x * 30, bodyDef.position.y * 30), scale);
+        var blt = world.CreateBody(bodyDef);
+        blt.sprite = sprite;
+        this.get('bodies').push(blt);
+        blt.CreateFixture(fixDef);
    }
 });
 

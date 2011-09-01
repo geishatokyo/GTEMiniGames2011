@@ -7,6 +7,7 @@ var cocos = require('cocos2d'),
 
 var Bullet = cocos.nodes.Node.extend({
     velocity: null,
+    mouseConect: false,
     init: function() {
        Bullet.superclass.init.call(this);
        var sprite = cocos.nodes.Sprite.create({

@@ -7,6 +7,7 @@ var cocos = require('cocos2d'),
 
 var Barrel = cocos.nodes.Node.extend({
     velocity: null,
+    mouseConect: false,
     init: function() {
        Barrel.superclass.init.call(this);
        var sprite = cocos.nodes.Sprite.create({
