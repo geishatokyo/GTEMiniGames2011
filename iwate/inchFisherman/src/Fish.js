@@ -18,9 +18,10 @@ var Fish = cocos.nodes.Node.extend({
     dir:0,
 	init: function(no) {
         Fish.superclass.init.call(this);
-        this.set('status',constant.fishStatusDatas(no));
-        var img = cocos.nodes.MenuItemImage.create({normalImage: "/resources/fish.png",
-                                                    selectedImage:"/resources/fish.png",
+        var sts = constant.fishStatusDatas(no);
+        
+        var img = cocos.nodes.MenuItemImage.create({normalImage: "/resources/fishs/"+sts.file+".png",
+                                                    selectedImage:"/resources/fishs/"+sts.file+".png",
                                                    callback: util.callback(this, 'clickCallback')});
         
                                                
@@ -41,11 +42,19 @@ var Fish = cocos.nodes.Node.extend({
         
         var rand = Math.random();
         this.set('dir',(rand>0.5)?1:-1);
-        this.set('velocity',{x:Math.random()*100,y:0})
+        this.set('velocity',{x:Math.random()*90+10,y:0})
+        
+        sts.length = (Math.random()+0.5)*sts.length;
+        var scale = sts.length/100;
+        if(scale<0.5) scale = 0.5;
+        this.set('scaleX',scale);
+        this.set('scaleY',scale);
         
         this.addCallback(util.callback(this,'hitCallback'));
         
         this.scheduleUpdate();
+        
+        this.set('status',sts);
 	},
 	update: function(dt) {
         var pos = util.copy(this.get('position')),
@@ -81,7 +90,7 @@ var Fish = cocos.nodes.Node.extend({
     clickCallback: function(){
         var list = util.copy(this.get('funclist'));
         for(var i=0;i<list.length;i++){
-            list[i]();
+            list[i](this);
         }
     },
     addCallback: function(func){

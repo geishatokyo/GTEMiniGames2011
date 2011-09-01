@@ -11,6 +11,7 @@ var Player = cocos.nodes.Node.extend({
 	defaultPosition:null,
     status:null,
     items:{boat:null,harpoon:null,chum:null},
+    dict:{},
 	init: function() {
         this.setup();
         this.set('status',{hp:100,HP:100,level:1,attack:1,defence:1});
