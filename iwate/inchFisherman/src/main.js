@@ -8,6 +8,7 @@ var Fish = require('Fish').Fish;
 var Dive = require('Dive').Dive;
 var Player = require('Player').Player;
 var constant = require('Constant').Constant;
+var ScrollView = require('ScrollView');
 
 var p = [[1,3,5],[2,4],[1,3,5]];
 
@@ -23,6 +24,7 @@ var Breakout = cocos.nodes.Layer.extend({
     harpoon:null,
     harpoonAmount:null,
     charBoard:null,
+    popup:null,
     init: function(player) {
         // You must always call the super class version of init
         Breakout.superclass.init.call(this);
@@ -122,15 +124,27 @@ var Breakout = cocos.nodes.Layer.extend({
         );
     },
     createFishs: function(){
-        for(var i=0;i<3;i++){
+        var power = this.get('player').get('items').chum.power;
+        for(var i=0;i<2+power;i++){
             this.createFish(i);
         }
     },
     createFish: function(i){
+        var attribute = this.get('player').get('items').chum.attribute;
         var s = cocos.Director.get('sharedDirector').get('winSize');
-        var fish = Fish.create(Math.floor( Math.random() * 12 ));
+        var type = Math.floor( Math.random() * 12 );
+        switch(attribute){
+            case 0:
+                break;
+            case 1:
+                if(type<5) type = 5+Math.floor( Math.random() * 7 );;
+                break;
+            default:
+                break;
+        }
+        var fish = Fish.create(type);
         fish.addCallback(util.callback(this,'hitCallback'));
-        fish.setPosition( new geo.Point(s.width*Math.floor(Math.random()*100), s.height/4*(i+1)));
+        fish.setPosition( new geo.Point(s.width*Math.floor(Math.random()*100), s.height/4*((i%3)+1)));
         this.addChild({child: fish,z:2*i+1});
     },
     update: function(){
@@ -193,13 +207,14 @@ var Breakout = cocos.nodes.Layer.extend({
     hitCallback: function(fish){
         var s = cocos.Director.get('sharedDirector').get('winSize');
         var h = this.get('harpoonAmount');
+        var sts = this.get('player').get('status');
         h--;
         if(h<0) {
             h=0
         }else{
             var fsts = util.copy(fish.get('status'));
             console.log('name:'+fsts.name+' HP:'+fsts.hp +' Length:'+fsts.length);
-            fsts.hp--;
+            fsts.hp -= sts.attack+this.get('player').get('items').harpoon.attack;
             fish.set('status',fsts);
             if(fsts.hp<=0){
                 var cb = [];
@@ -234,7 +249,7 @@ var Breakout = cocos.nodes.Layer.extend({
                     l.set('position', new geo.Point(size.width/2,size.height/2));
                     sprite.addChild({child: l, z: 0});
                     var dict = this.get('player').dict;
-                    if(dict[fsts.name] == undefined||dict[fsts.name]>fsts.length){
+                    if(dict[fsts.name] == undefined||dict[fsts.name].length<fsts.length){
                         l.set('position', new geo.Point(size.width/2,size.height/2-10));
                         var l = cocos.nodes.Label.create({string: fsts.name+' : '+ Math.round(fsts.length*10)/10 + '、最高記録です',
                                                         fontName: "Thonburi",
@@ -242,11 +257,49 @@ var Breakout = cocos.nodes.Layer.extend({
                                                        fontColor: '#502d16'});
                         l.set('position', new geo.Point(size.width/2,size.height/2+10));
                         sprite.addChild({child: l, z: 0});
-                        dict = fsts.length;
+                        dict[fsts.name] = {id:fsts.id,length:fsts.length};
                         time = 1500;
                     }
-                }
                 
+                }
+                sts.exp += fsts.exp;
+                if(sts.exp >= sts.EXP){
+                    sts.exp -= sts.EXP;
+                    sts.EXP += Math.floor(sts.EXP/10);
+                    sts.level++;
+                    var dAttack = Math.floor(Math.random()*sts.level)+1;
+                    var dDefence = Math.floor(Math.random()*sts.level)+1;
+                    sts.attack += dAttack;
+                    sts.defence += dDefence;
+                    
+                    var popupLevelup = [];
+                    var l = cocos.nodes.Label.create({string: 'LEVEL UP!',
+                                                    fontName: "Thonburi",
+                                                    fontSize: 64,
+                                                   fontColor: '#FF0000'});
+                    l.set('position', new geo.Point(s.width/2+50,50));
+                    this.addChild({child: l, z: 20});
+                    popupLevelup.push(l);
+                    var l = cocos.nodes.Label.create({string: 'ATTACK +'+dAttack,
+                                                    fontName: "Thonburi",
+                                                    fontSize: 32,
+                                                   fontColor: '#FF0000'});
+                    l.set('position', new geo.Point(s.width/2+50,130));
+                    this.addChild({child: l, z: 20});
+                    popupLevelup.push(l);
+                    var l = cocos.nodes.Label.create({string: 'ATTACK +'+dDefence,
+                                                    fontName: "Thonburi",
+                                                    fontSize: 32,
+                                                   fontColor: '#FF0000'});
+                    l.set('position', new geo.Point(s.width/2+50,170));
+                    this.addChild({child: l, z: 20});
+                    popupLevelup.push(l);
+                    this.set('popup',popupLevelup);
+                    window.setTimeout(
+                        util.callback(this, 'removePopUp'),2000
+                    );
+                }
+            
                 this.set('charBoard',cb);
                 window.setTimeout(
                     util.callback(this, 'removeCharBoard'),time
@@ -283,6 +336,12 @@ var Breakout = cocos.nodes.Layer.extend({
             /*var dive = Dive.create();
             this.addChild({child:dive,z:8});
             dive.setPosition(new geo.Point(s.width / 4*3, s.height /2));*/
+        }
+    },
+    removePopUp: function(){
+        var pop = this.get('popup');
+        for(i=0;i<pop.length;i++){
+            this.removeChild({child:pop[i],cleanup:true});
         }
     },
     removeHitLabel: function(){
@@ -348,26 +407,32 @@ var Harbor = cocos.nodes.Layer.extend({
         this.addChild({child: l, z: 1});
         
         var boat = constant.boatDatas(0);
-        var item1= cocos.nodes.MenuItemImage.create({normalImage: '/resources/'+boat.file,
+        var item= cocos.nodes.MenuItemImage.create({normalImage: '/resources/'+boat.file,
                                                     selectedImage:'/resources/'+boat.file,
                                                     callback: util.callback(this, 'boatCallback')})
-        item1.set('position',new geo.Point(-120,0));
+        var menu = cocos.nodes.Menu.create({items: [item]});
+        menu.set('position', new geo.Point(s.width/2-70,s.height/2));
+        this.addChild({child: menu, z: 0});
+        this.set('boat',menu);
         var harpoon = constant.harpoonDatas(0);
-        var item2 = cocos.nodes.MenuItemImage.create({normalImage: '/resources/'+harpoon.file,
+        var item = cocos.nodes.MenuItemImage.create({normalImage: '/resources/'+harpoon.file,
                                                     selectedImage:'/resources/'+harpoon.file,
                                                     callback: util.callback(this, 'harpoonCallback')})
-        item2.set('position',new geo.Point(0,0));
-        var chum = constant.chumDatas(0);
-        var item3 = cocos.nodes.MenuItemImage.create({normalImage: '/resources/'+chum.file,
-                                                    selectedImage:'/resources/'+chum.file,
-                                                    callback: util.callback(this, 'chumCallback')})
-        item3.set('position',new geo.Point(120,0));
-        var menu = cocos.nodes.Menu.create({items: [item1,item2,item3]});
+        var menu = cocos.nodes.Menu.create({items: [item]});
         menu.set('position', new geo.Point(s.width/2+50,s.height/2));
         this.addChild({child: menu, z: 0});
-        this.set('boat',item1);
-        this.set('harpoon',item2);
-        this.set('chum',item3);
+        this.set('harpoon',menu);
+        var chum = constant.chumDatas(0);
+        var item = cocos.nodes.MenuItemImage.create({normalImage: '/resources/'+chum.file,
+                                                    selectedImage:'/resources/'+chum.file,
+                                                    callback: util.callback(this, 'chumCallback')})
+        var menu = cocos.nodes.Menu.create({items: [item]});
+        menu.set('position', new geo.Point(s.width/2+170,s.height/2));
+        this.addChild({child: menu, z: 0});
+        this.set('chum',menu);
+        
+        
+        
         var items = player.get('items');
         items.boat = boat;
         items.harpoon = harpoon;
@@ -379,6 +444,13 @@ var Harbor = cocos.nodes.Layer.extend({
         button.set('scaleX',0.5);button.set('scaleY',0.5);
         var menu = cocos.nodes.Menu.create({items: [button]});
         menu.set('position', new geo.Point(50,s.height-50));
+        this.addChild({child: menu, z: 0});
+        var button = cocos.nodes.MenuItemImage.create({normalImage: '/resources/next.png',
+                                                    selectedImage:'/resources/next.png',
+                                                    callback: util.callback(this, 'dictButtonCallback')});
+        button.set('scaleX',0.5);button.set('scaleY',0.5);
+        var menu = cocos.nodes.Menu.create({items: [button]});
+        menu.set('position', new geo.Point(s.width-50,s.height-50));
         this.addChild({child: menu, z: 0});
 
         var sts = player.get('status');
@@ -511,11 +583,9 @@ var Harbor = cocos.nodes.Layer.extend({
     },
     bItemCallback: function(own){
         var boat = this.get('boat');
-        
-        boat.normalImage = own.normalImage;
-        boat.selectedImage = own.selectedImage;
-                
+        var s = cocos.Director.get('sharedDirector').get('winSize');
         try{
+            this.removeChild(boat);
             this.removeChild(this.get('itemName'));
             var itemInfo = this.get('itemInfo');
             for(i=0;i<itemInfo.length;i++)
@@ -545,14 +615,22 @@ var Harbor = cocos.nodes.Layer.extend({
         this.set('itemInfo',itemInfos);
         var items = this.get('player').get('items');
         items.boat = constant.boatDatas(i);
+        
+        var item= cocos.nodes.MenuItemImage.create({normalImage: '/resources/'+items.boat.file,
+                                                    selectedImage:'/resources/'+items.boat.file,
+                                                    callback: util.callback(this, 'boatCallback')})
+        var menu = cocos.nodes.Menu.create({items: [item]});
+        menu.set('position', new geo.Point(s.width/2-70,s.height/2));
+        this.addChild({child: menu, z: 0});
+        this.set('boat',menu);
+        
     },
     hItemCallback: function(own){
         var harpoon = this.get('harpoon');
-        
-        harpoon.normalImage = own.normalImage;
-        harpoon.selectedImage = own.selectedImage;
+        var s = cocos.Director.get('sharedDirector').get('winSize');
                 
         try{
+            this.removeChild(harpoon);
             this.removeChild(this.get('itemName'));
             var itemInfo = this.get('itemInfo');
             for(i=0;i<itemInfo.length;i++)
@@ -590,14 +668,19 @@ var Harbor = cocos.nodes.Layer.extend({
         this.set('itemInfo',itemInfos);
         var items = this.get('player').get('items');
         items.harpoon = constant.harpoonDatas(i);
+        var item= cocos.nodes.MenuItemImage.create({normalImage: '/resources/'+items.harpoon.file,
+                                                    selectedImage:'/resources/'+items.harpoon.file,
+                                                    callback: util.callback(this, 'harpoonCallback')})
+        var menu = cocos.nodes.Menu.create({items: [item]});
+        menu.set('position', new geo.Point(s.width/2+50,s.height/2));
+        this.addChild({child: menu, z: 0});
+        this.set('harpoon',menu);
     },
     cItemCallback: function(own){
         var chum = this.get('chum');
-        
-        chum.normalImage = own.normalImage;
-        chum.selectedImage = own.selectedImage;
-                
+        var s = cocos.Director.get('sharedDirector').get('winSize');
         try{
+            this.removeChild(chum);
             this.removeChild(this.get('itemName'));
             var itemInfo = this.get('itemInfo');
             for(i=0;i<itemInfo.length;i++)
@@ -624,9 +707,24 @@ var Harbor = cocos.nodes.Layer.extend({
         l.set('anchorPoint', new geo.Point(0,0));
         this.addChild({child: l, z: 1});
         itemInfos.push(l);
+        var l = cocos.nodes.Label.create({string: 'ATTRIBUTE:'+constant.chumDatas(i).attribute.toString(),
+                                        fontName: "Thonburi",
+                                        fontSize: 16,
+                                       fontColor: '#000000'});
+        l.set('position', new geo.Point(10, 220));
+        l.set('anchorPoint', new geo.Point(0,0));
+        this.addChild({child: l, z: 1});
+        itemInfos.push(l);
         this.set('itemInfo',itemInfos);
         var items = this.get('player').get('items');
         items.chum = constant.chumDatas(i);
+        var item= cocos.nodes.MenuItemImage.create({normalImage: '/resources/'+items.chum.file,
+                                                    selectedImage:'/resources/'+items.chum.file,
+                                                    callback: util.callback(this, 'chumCallback')})
+        var menu = cocos.nodes.Menu.create({items: [item]});
+        menu.set('position', new geo.Point(s.width/2+170,s.height/2));
+        this.addChild({child: menu, z: 0});
+        this.set('chum',menu);
     },
     update: function(dt){
         var t = this.get('elapsedTime');
@@ -662,8 +760,56 @@ var Harbor = cocos.nodes.Layer.extend({
             scene.addChild({child: Breakout.create(p)});
             director.replaceScene(scene);
         }
+    },
+    dictButtonCallback: function(){
+        var director = cocos.Director.get('sharedDirector');
+        var p = this.get('player');
+        var scene = cocos.nodes.Scene.create();
+        scene.addChild({child: Dict.create(p)});
+        director.replaceScene(scene);
+    }
+    
+});
+
+var Dict = cocos.nodes.Layer.extend({
+    player:null,
+    init: function(player){
+        Dict.superclass.init.call(this);
+        this.set('player',player);
+        var s = cocos.Director.get('sharedDirector').get('winSize');
+        var dict = player.get('dict');
+        var datas = [];
+        var fish;
+        for(var i in dict){
+            fish = constant.fishStatusDatas(dict[i].id);
+            datas.push({file:"/resources/fishs/"+fish.file+".png",name:fish.name,recode:Math.floor(dict[i].length*10)/10});
+        }
+        
+        var view = ScrollView.ScrollView.create(datas);
+        view.set('contentSize',{width:400,height:300});
+        view.set('position',new geo.Point(s.width/2,s.height/2));
+        view.set('anchorPoint',new geo.Point(0.5,0.5));
+        view.set('isRelativeAnchorPoint', true);
+        this.addChild(view);
+        
+        var button = cocos.nodes.MenuItemImage.create({normalImage: '/resources/next.png',
+                                                    selectedImage:'/resources/next.png',
+                                                    callback: util.callback(this, 'buttonCallback')});
+        button.set('scaleX',0.5);button.set('scaleY',0.5);
+        var menu = cocos.nodes.Menu.create({items: [button]});
+        menu.set('position', new geo.Point(s.width-50,s.height-50));
+        this.addChild({child: menu, z: 0});
+    },
+    buttonCallback: function(){
+        var director = cocos.Director.get('sharedDirector');
+
+        var scene = cocos.nodes.Scene.create();
+        scene.addChild({child: Harbor.create(this.get('player'))});
+
+        director.replaceScene(scene);
     }
 });
+
 exports.main = function() {
     // Initialise application
 
@@ -681,6 +827,7 @@ exports.main = function() {
     // Add our layer to the scene
     //scene.addChild({child: Breakout.create()});
     scene.addChild({child: Harbor.create(player)});
+    //scene.addChild({child: Dict.create(player)});
 
     // Run the scene
     director.runWithScene(scene);

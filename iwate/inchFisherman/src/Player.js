@@ -14,7 +14,7 @@ var Player = cocos.nodes.Node.extend({
     dict:{},
 	init: function() {
         this.setup();
-        this.set('status',{hp:100,HP:100,level:1,attack:1,defence:1});
+        this.set('status',{hp:100,HP:100,level:1,attack:1,defence:1,exp:0,EXP:10,});
 	},
     setup: function(){
         Player.superclass.init.call(this);
