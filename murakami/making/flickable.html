@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<title>フリックサンプル</title>
+		<script type="text/javascript" src="jquery-1.5.2.js"></script>
+		<script type="text/javascript" src="view_source.js"></script>
+		<script type="text/javascript" src="jquery.flickable.js"></script>
+
+<style type="text/css">
+      #flickable {
+        border: 1px solid #CCC;
+        width: 300px;
+        height: 345px;
+        overflow: auto;
+        float: left;
+      }
+      #flickable ul {
+        list-style: none;
+        margin: 0;
+        padding: 5px;
+      }
+      #flickable ul li {
+        margin: 0;
+        padding: 10px;
+      }
+      #flickable .block {
+        background-color: #EEE;
+        border: 1px solid #CCC;
+      }
+      #flickable .block, #flickable .space {
+        width: 250px;
+        height: 140px;
+        padding: 5px;
+      }
+      #flickable .ui-flickable-container {
+        cursor: pointer;
+      }
+      #flickable-events {
+        background-color: #EEE;
+        border: 1px solid #CCC;
+        width: 190px;
+        list-style: none;
+      }
+      #flickable-events li {
+        background-color: #FFF;
+        border: 1px solid #CCC;
+        padding: 3px;
+        margin: 5px;
+      }
+      #flickable-events .notice {
+          background:#FFF6BF;
+          color:#514721;
+          border-color:#FFD324;
+      }
+      #flickable .notice {
+          background:#FFF6BF;
+          color:#514721;
+          border-color:#FFD324;
+      }
+
+    </style>
+    
+
+	
+    <script type="text/javascript">
+      $(function() {
+          $('#flickable').flickable();
+      });
+    </script>
+    
+    <div id="flickable">
+      <ul> 
+        <li><div id="b1" class="block">Content 1</div></li>
+        <li><div class="block">Content 2</div></li>
+        <li><div class="block">Content 3</div></li>
+        <li><div class="block">Content 4</div></li>
+        <li><div class="block">Content 5</div></li>
+        <li>
+          <div class="block">Content 6</div>
+          <div class="space"></div>
+        </li>
+      </ul>
+      <div style="clear:both;"></div>
+    </div>
+	<body>
+	</body>
+</html>
