@@ -8,7 +8,8 @@
 		<title>ホーム</title>
 		<script type="text/javascript" src="enchant.js"></script>
 		<script type="text/javascript" src="enchant.prototype.js"></script>
-		<script type="text/javascript" src="jquery.js"></script>
+		<script type="text/javascript" src="jquery-1.5.2.js"></script>
+		<script type="text/javascript" src="jquery.flickable.js"></script>
 		<script type="text/javascript" src="game.js"></script>
 		<style type="text/css">
 			body {
@@ -25,6 +26,7 @@
 					border-radius:10px;
 					-webkit-border-radius:10px;
 					-moz-border-radius:10px;
+					border: 3px solid #000000;
 				}
 				.css3button {
 					text-align:center;
@@ -49,7 +51,7 @@
 					border-radius: 10px;
 					-moz-border-radius: 10px;
 					-webkit-border-radius: 10px;
-					border: 1px solid #000000;
+					border: 1px solid #444444;
 					-moz-box-shadow:
 						0px 1px 3px rgba(000,000,000,0.5),
 						inset 0px 0px 5px rgba(161,142,016,0.6);
@@ -60,46 +62,56 @@
 						0px -1px 3px rgba(255,255,255,0.8),
 						0px 1px 0px rgba(255,255,255,0.3);
 				}
-				table.table010 {
-				  margin-top: 0.2em;
-				  margin-bottom: 1em;
-				  width: 570px;
-				  border-collapse: collapse;
-				  border: solid 1px #999;
-				  font-size: 100%;
-				}
-
-				table.table010 caption {
-				  margin-top: 1em;
-				  text-align: left;
-				}
-
-				table.table010 th,
-				table.table010 td {
-				  border: solid 1px #999;
-				  padding: 4px 6px;
-				}
-
-				table.table010 th {
-				  background: #E6E6E6;
-				  text-align: center;
-				  white-space: nowrap;
-				  color: #666;
-				}
-
-				table.table010 td.course {
-				  text-align: center;
-				  font-size: 200%;
-				  font-weight: bolder;
-				}
-
-				table.table010 td.time,
-				table.table010 td.fee {
-				  text-align: right;
-				  white-space: nowrap;
-				}
-
-
+			   .flickable {
+		        border: 1px solid #CCC;
+		        width: 300px;
+		        height: 345px;
+		        overflow: hidden;
+		        float: left;
+		      }
+		      .flickable ul {
+		        list-style: none;
+		        margin: 0;
+		        padding: 5px;
+		      }
+		      .flickable ul li {
+		        margin: 0;
+		        padding: 10px;
+		      }
+		      .flickable .block {
+		        background-color: #EEE;
+		        border: 1px solid #CCC;
+		      }
+		      .flickable .block, .flickable .space {
+		        width: 250px;
+		        height: 140px;
+		        padding: 5px;
+		      }
+		      .flickable .ui-flickable-container {
+		        cursor: pointer;
+		      }
+		      .flickable-events {
+		        background-color: #EEE;
+		        border: 1px solid #CCC;
+		        width: 190px;
+		        list-style: none;
+		      }
+		      .flickable-events li {
+		        background-color: #FFF;
+		        border: 1px solid #CCC;
+		        padding: 3px;
+		        margin: 5px;
+		      }
+		      .flickable-events .notice {
+		          background:#FFF6BF;
+		          color:#514721;
+		          border-color:#FFD324;
+		      }
+		      .flickable .notice {
+		          background:#FFF6BF;
+		          color:#514721;
+		          border-color:#FFD324;
+		      }
 		</style>
 	</head>
 	<body>

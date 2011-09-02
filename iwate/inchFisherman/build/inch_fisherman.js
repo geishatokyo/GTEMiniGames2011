@@ -24135,6 +24135,7 @@ var Breakout = cocos.nodes.Layer.extend({
         var type = Math.floor( Math.random() * 12 );
         switch(attribute){
             case 0:
+                if(type>5) type = Math.floor( Math.random() * 5 );;
                 break;
             case 1:
                 if(type<5) type = 5+Math.floor( Math.random() * 7 );;
