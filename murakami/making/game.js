@@ -15,7 +15,7 @@ window.onload = function() {
 		game.replaceScene(home);		
 
 		// プレイヤーを作成
- 		var player = new Player("player",10,10,100);
+ 		var player = new Player("player",randomRange(5,10),randomRange(5,10),randomRange(10,30));
 
 		// モンスターの1軍を作る
 		var majorList = [];
@@ -247,8 +247,8 @@ window.onload = function() {
 		buttonForward.text = '進む';
 		buttonForward.backgroundColor = 'red';
 		buttonForward.font = '4em"Ariar"';
-		buttonForward.addEventListener('touchend',function(e){
-			while(distance < opdungeon.size){
+		buttonForward.addEventListener('enterframe',function(){
+			if(game.frame % game.fps == 0){ // 1秒ごとに実行
 				dungeon.removeChild(symbol) // 敵シンボルや宝箱シンボルを消す
 				switch(phase){
 					case defaultPhase:
@@ -309,13 +309,16 @@ window.onload = function() {
 				healthInfo.text =  player.health+"/"+player.healthmax; // HP情報を表示
 				levelInfo.text = "Lv:"+player.level; // レベル情報を表示
 				distance += 5 // ダンジョンの進行度を上げる
-				window.setTimeout("wait()", 3000);
 			}
-
-			function wait(){
-				alert(distance)
+			if(distance > opdungeon.size){
+				alert("おたからを取り返されてしまった・・・")
+				game.replaceScene(home)
 			}
-
+			if(player.health <= 0 ){
+				alert("プレイヤーを返り討ちにした")
+				game.replaceScene(home)
+			}
+		});
 			/*
 			dungeon.removeChild(symbol) // 敵シンボルや宝箱シンボルを消す
 			switch(phase){
@@ -378,9 +381,8 @@ window.onload = function() {
 			levelInfo.text = "Lv:"+player.level; // レベル情報を表示
 			distance += 5 // ダンジョンの進行度を上げる
 			*/
-				alert("ダンジョンクリア")
-				game.replaceScene(home)
-		});
+
+
 
 
 		// ホーム画面に戻るためのボタン
