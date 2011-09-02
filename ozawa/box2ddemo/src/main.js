@@ -8,17 +8,24 @@ var cocos = require('cocos2d'),
 	box2d = require('box2d'),
 // Import Barrel
 	Barrel = require('Barrel').Barrel,
+	BarrelBase = require('Barrel').BarrelBase,
 // Import Bullet
-	Bullet = require('Bullet').Bullet;
+	Bullet = require('Bullet').Bullet,
+// Import Background
+	Background = require('Background').Background;
+	Background2 = require('Background').Background2;
 	
 // Create a new layer
 var Box2ddemo = cocos.nodes.Layer.extend({    
 	Barrel: null,
 	Bullet: null,
+	Background: null,
+	Background2: null,
 	world: null,
     bodies: null,
     holes: null,
     contact: null,
+    ballSetPattern: null,
     selectedBody: null,
     mouseJoint: null,
     init: function() {
@@ -28,6 +35,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         this.set('isMouseEnabled', true);
         this.set('bodies', []);
         this.set('holes', []);
+        this.set('ballSetPattern',0);
 
         // Get size of canvas
         var s = cocos.Director.get('sharedDirector').get('winSize');
@@ -40,12 +48,24 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         barrel.set('position', new geo.Point(5*420/14+15,6.5*420/14));
         this.addChild({child: barrel,z:20});
         this.set('barrel', barrel);
-        
-        //Add bullet
+        var barrelBase = BarrelBase.create();
+        barrelBase.set('position', new geo.Point(5*420/14+15,6.5*420/14));
+        this.addChild({child: barrelBase,z:19});
+        this.set('barrelBase', barrelBase);
+        //Add Bullet
         var bullet = Bullet.create();
         bullet.set('position',new geo.Point(5*420/14+15,6.5*420/14));
         this.addChild({child: bullet,z:20});
         this.set('bullet', bullet);
+        //Add Background
+        var background = Background.create(),
+        	background2 = Background2.create();
+        background.set('position',new geo.Point(360,200));
+        background2.set('position',new geo.Point(360,200));
+        this.addChild({child: background,z:-2});
+        this.set('background', background);
+        this.addChild({child: background2,z:-1});
+        this.set('background2', background2);
         
         // Add Menu
         var up = cocos.nodes.MenuItemImage.create({normalImage: "/resources/up.png",
@@ -91,7 +111,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     },
     createShot: function(point, scale){
     	scale = scale || 1;
-    	var sprite = cocos.nodes.Sprite.create({file:'/resources/ball.png'});
+    	var sprite = cocos.nodes.Sprite.create({file:'/resources/bullet.png'});
     	sprite.set('position',point);
     	sprite.set('scale',scale);
     	this.addChild(sprite);
@@ -99,7 +119,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     },
     createHole: function(point,scale){
     	scale = scale || 1;
-    	var sprite = cocos.nodes.Sprite.create({file:'/resources/ball.png'});
+    	var sprite = cocos.nodes.Sprite.create({file:'/resources/hole.png'});
     	sprite.set('position',point);
     	sprite.set('scale',scale);
     	this.addChild(sprite);
@@ -164,23 +184,23 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         fixDef.shape = new box2d.b2PolygonShape;
         
         fixDef.shape.SetAsBox(20, 2);
-        bodyDef.position.Set(10, 400 / 30 + 2);
+        bodyDef.position.Set(10, (400 / 30 + 2)-1);
         world.CreateBody(bodyDef).CreateFixture(fixDef);
-        bodyDef.position.Set(10, -2);
+        bodyDef.position.Set(10, -1);
         world.CreateBody(bodyDef).CreateFixture(fixDef);
         
         fixDef.shape.SetAsBox(4, 14);
-        bodyDef.position.Set(1, 13);
+        bodyDef.position.Set(0.8, 13);
         world.CreateBody(bodyDef).CreateFixture(fixDef);
-        bodyDef.position.Set(23, 13);
+        bodyDef.position.Set(22.95, 13);
         world.CreateBody(bodyDef).CreateFixture(fixDef);
     	
     	//create Hole
     	fixDef.shape = new box2d.b2CircleShape(0.5);
     	fixDef.isSensor = true;
     	for(var i = 0; i < 3; i++){
-    		bodyDef.position.x = 18;
-    		bodyDef.position.y = 14/3*i+14/6;
+    		bodyDef.position.x = 17.9;
+    		bodyDef.position.y = 13/3*i+14/6;
     		sprite = this.createHole(new geo.Point(bodyDef.position.x * 30, bodyDef.position.y * 30), scale);
     		var hole = world.CreateBody(bodyDef);
             hole.sprite = sprite;
@@ -276,7 +296,8 @@ var Box2ddemo = cocos.nodes.Layer.extend({
             world = this.get('world'),
             mouseJoint = this.get('mouseJoint'),
             barrel = this.get('barrel'),
-            bullet = this.get('bullet');
+            bullet = this.get('bullet'),
+            barrelBase = this.get('barrelBase');
 			
         if (!mouseJoint) {
             var body = this.getBodyAtPoint(point);
@@ -294,12 +315,12 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         }
         
         if(!barrel.mouseConect){
-        	var pos = util.copy(barrel.get('position')),
+        	var pos = util.copy(barrelBase.get('position')),
         		rot = util.copy(barrel.get('rotaiton')),
         		slope = Math.tan(Math.PI*rot/180),
         		intercept = 16/Math.cos(Math.PI*rot/180);
-        	if(point.x>=pos.x-64-16 && point.x<=pos.x-16){
-        		if(point.y<=pos.y+8 && point.y>=pos.y-8){
+        	if(point.x>=pos.x-96 && point.x<=pos.x-16){
+        		if(point.y<=pos.y+36 && point.y>=pos.y-36){
         			barrel.mouseConect=true;	
         		}
         	}
@@ -311,14 +332,15 @@ var Box2ddemo = cocos.nodes.Layer.extend({
      		}
         	
         }
-        console.log(barrel.mouseConect,bullet.mouseConect);
+        //console.log(barrel.mouseConect,bullet.mouseConect);
     }, 
     mouseDragged: function(evt) {
         var point = evt.locationInCanvas,
             world = this.get('world'),
             mouseJoint = this.get('mouseJoint'),
             barrel = this.get('barrel'),
-            bullet = this.get('bullet');
+            bullet = this.get('bullet'),
+            barrelBase = this.get('barrelBase');
 		//console.log(point,mouseJoint);
         if (mouseJoint) {
             mouseJoint.SetTarget(new box2d.b2Vec2(point.x /30, point.y /30));
@@ -328,6 +350,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         	pos.y = point.y;
         	barrel.set('position',pos);
         	bullet.set('position',pos);
+        	barrelBase.set('position',pos);
         }
         if(bullet.mouseConect){
         	var pos = util.copy(barrel.get('position')),
@@ -336,7 +359,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         	pos.y = -pos.y+point.y;
         	rot = Math.atan2(pos.y,pos.x);
         	barrel.set('rotation',rot*180/Math.PI); 
-        	console.log(pos.x,pos.y,rot*180/Math.PI);
+        	//console.log(pos.x,pos.y,rot*180/Math.PI);
         }
     }, 
 	mouseUp: function(evt) {
@@ -354,12 +377,13 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         }
         if(bullet.mouseConect){
         	bullet.mouseConect=false;
-        	this.shotBall();
+        	this.shotBall(evt);
         }
-        console.log(barrel.mouseConect,bullet.mouseConect);
+        //console.log(barrel.mouseConect,bullet.mouseConect);
    },
-   
+
    moveUp: function(){
+   		
    		var barrel = this.get('barrel'),
         	pos = util.copy(barrel.get('position')),
         	bullet = this.get('bullet');  
@@ -368,7 +392,7 @@ var Box2ddemo = cocos.nodes.Layer.extend({
         }
         barrel.set('position',pos);
         bullet.set('position',pos);
-        
+     
    },
    moveDown: function(){
    		var barrel = this.get('barrel'),
@@ -392,9 +416,10 @@ var Box2ddemo = cocos.nodes.Layer.extend({
    		rotation += 5;
    		barrel.set('rotation',rotation);
    },
-   shotBall: function(){
-   		var world = this.get('world');
-    	var barrel = this.get('barrel'),
+   shotBall: function(evt){
+   		var point = evt.locationInCanvas,
+   			world = this.get('world'),
+    		barrel = this.get('barrel'),
     		position = util.copy(barrel.get('position')), 
     		rotation = util.copy(barrel.get('rotation'));
     	
@@ -403,12 +428,13 @@ var Box2ddemo = cocos.nodes.Layer.extend({
     	fixDef.friction = 1.0;
     	fixDef.restitution = 1.0;
     	var bodyDef = new box2d.b2BodyDef;
-    	
+    	var velocity = Math.sqrt(Math.pow(position.x-point.x,2)+Math.pow(position.y-point.y,2))/15;
+    	console.log(velocity); 
    		bodyDef.type = box2d.b2Body.b2_dynamicBody;
    		bodyDef.position.x = 5;
         bodyDef.position.y = (position.y)*14/420;
-        bodyDef.linearVelocity.x = 10*Math.cos(Math.PI*rotation/180);
-        bodyDef.linearVelocity.y = 10*Math.sin(Math.PI*rotation/180);
+        bodyDef.linearVelocity.x = velocity*Math.cos(Math.PI*rotation/180);
+        bodyDef.linearVelocity.y = velocity*Math.sin(Math.PI*rotation/180);
         bodyDef.linearDamping = 0.3;
         bodyDef.angularDamping = 0.5;
         var scale = 0.5,

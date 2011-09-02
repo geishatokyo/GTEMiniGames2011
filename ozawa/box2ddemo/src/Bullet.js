@@ -11,7 +11,7 @@ var Bullet = cocos.nodes.Node.extend({
     init: function() {
        Bullet.superclass.init.call(this);
        var sprite = cocos.nodes.Sprite.create({
-           file: '/resources/ball.png',
+           file: '/resources/bullet.png',
            rect: new geo.Rect(0, 0, 64, 64)
            });
        sprite.set('anchorPointInPixels', new geo.Point(0, 0));
